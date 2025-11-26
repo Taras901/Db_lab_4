@@ -31,6 +31,10 @@ with app.app_context():
     Base.prepare(autoload_with=db.engine)
 
 Clients = Base.classes.clients
+Trainers = Base.classes.trainers
+Equipment = Base.classes.equipment
+Services = Base.classes.services
+GymSchedule = Base.classes.gym_schedule
 ClientVisits = Base.classes.client_visits
 Exercises = Base.classes.exercises
 ProgramExercises = Base.classes.program_exercises
@@ -46,7 +50,12 @@ def row_to_dict(row):
 
 @app.route('/')
 def index():
-    return jsonify({"status": "Online", "message": "API готове!"})
+    return jsonify({
+        "status": "Online", 
+        "routes": [
+            "GET:http://127.0.0.1:5000/clients", "POST:http://127.0.0.1:5000/clients", "PUT:http://127.0.0.1:5000/clients/1", "DELETE:http://127.0.0.1:5000/clients/10", "Багато до одного.GET:http://127.0.0.1:5000/clients/1/visits", "Багато до багатьох.GET:http://127.0.0.1:5000/programs/1/exercises"
+        ]
+    })
 
 @app.route('/clients', methods=['GET'])
 def get_clients():
@@ -76,7 +85,6 @@ def update_client(client_id):
     data = request.json
     client = db.session.query(Clients).get(client_id)
     if not client: return jsonify({"error": "Not found"}), 404
-    
     try:
         if 'first_name' in data: client.first_name = data['first_name']
         if 'last_name' in data: client.last_name = data['last_name']
@@ -97,6 +105,26 @@ def delete_client(client_id):
         return jsonify({"message": "Видалено"})
     except Exception as e:
         return jsonify({"error": str(e)}), 400
+
+@app.route('/trainers', methods=['GET'])
+def get_trainers():
+    items = db.session.query(Trainers).all()
+    return jsonify([row_to_dict(item) for item in items])
+
+@app.route('/equipment', methods=['GET'])
+def get_equipment():
+    items = db.session.query(Equipment).all()
+    return jsonify([row_to_dict(item) for item in items])
+
+@app.route('/services', methods=['GET'])
+def get_services():
+    items = db.session.query(Services).all()
+    return jsonify([row_to_dict(item) for item in items])
+
+@app.route('/schedule', methods=['GET'])
+def get_schedule():
+    items = db.session.query(GymSchedule).all()
+    return jsonify([row_to_dict(item) for item in items])
 
 @app.route('/clients/<int:client_id>/visits', methods=['GET'])
 def get_client_visits(client_id):
